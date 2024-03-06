@@ -17,7 +17,7 @@
             <label style="margin-right: 10px;">Exclude hours greater than:</label>
             <input id="limit" type="number" oninput="onLimitChange()" value="8">
         </div>
-        <button onclick="exportCSV()" style="max-width: 125px;">Export CSV</button>
+        <button id="export-button" onclick="exportCSV()" style="max-width: 125px;">Export CSV</button>
         <p style="margin: 0px" id="err"></p>
         <div id="table-div"></div>
     </div>

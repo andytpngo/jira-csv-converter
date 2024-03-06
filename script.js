@@ -3,6 +3,7 @@ let contents = []; // globally contains csv data as 2D array
 let baseFilename = 'file';
 let exportData = [];
 let LIMIT = 8;
+document.getElementById('export-button').style.visibility = 'hidden';
 
 const readFile = () => {
   const reader = new FileReader()
@@ -84,6 +85,7 @@ const modifyCSV = (csvData) => {
     }
     else
     {
+        document.getElementById('export-button').style.visibility = 'visible';
         document.getElementById('err').innerHTML = "Preview:";
         // append data to export csv
         // add header

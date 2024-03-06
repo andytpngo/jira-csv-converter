@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRA CSV Converter</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div style="display: flex;flex-direction: column;row-gap: 10px;">
+        <div>
+            <p>Select local CSV File:</p>
+            <input id="csv" type="file" accept=".csv">
+        </div>
+        <div style="display: flex;">
+            <label style="margin-right: 10px;">Exclude hours greater than:</label>
+            <input id="limit" type="number" oninput="onLimitChange()" value="8">
+        </div>
+        <button onclick="exportCSV()" style="max-width: 125px;">Export CSV</button>
+        <p style="margin: 0px" id="err"></p>
+        <div id="table-div"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
+    <script src="papaparse.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -73,7 +73,21 @@ const countLeadingSpaces = (inputString) => {
       // No leading spaces found
       return 0;
     }
-  }
+}
+
+const gcf = (num1, num2) => {
+    // Ensure both numbers are positive integers
+    num1 = Math.abs(Math.floor(num1));
+    num2 = Math.abs(Math.floor(num2));
+
+    while (num2) {
+        const temp = num2;
+        num2 = num1 % num2;
+        num1 = temp;
+    }
+
+    return num1;
+}
 
 // Given a CSV in form of 2D array
 const modifyCSV = (csvData) => {
@@ -108,40 +122,42 @@ const modifyCSV = (csvData) => {
         // TODO: some summaries are repeated (i.e. template and configuration)
         // make it more descriptive "News - Template" and "Profile Cards - Template"
         //      - need to find a way to make parents and children summaries
-        let parentHeading = null;
-        let leadingSpace = 0;
+        let stack = [csvData[startIndex][0].trim()];
         for (let i=startIndex+1; i<csvData.length; i++)
         {
             let line = csvData[i];
-            if (i !== csvData.length-1)
+            if (startIndex+1 < i)
             {
-                // look ahead at next line
-                let nextLine = csvData[i+1];
+                // look backwards
+                let prevLine = csvData[i-1];
                 let currentSpaceCount = countLeadingSpaces(line[0]);
-                let nextSpaceCount = countLeadingSpaces(nextLine[0]);
-                if (nextSpaceCount > currentSpaceCount)
+                let prevSpaceCount = countLeadingSpaces(prevLine[0]);
+                if (currentSpaceCount ==0)
                 {
-                    parentHeading = line[0].trim();
-                    leadingSpace = currentSpaceCount;
+                    stack = [];
                 }
+                else if (currentSpaceCount <= prevSpaceCount)
+                {
+                    let difference = (prevSpaceCount-currentSpaceCount)/gcf(prevSpaceCount, currentSpaceCount);
+                    for (let q=0; q<difference+1; q++)
+                    {
+                        stack.pop();
+                    }
+                }
+                stack.push(line[0].trim())
+                
             }
             if (line.length >= employees.length)
             {
                 let description = line[0];
                 if (description)
                 {
-                    if (countLeadingSpaces(description) > leadingSpace)
-                    {
-                        description = parentHeading + ' - ' + description.trim();
-                    }
-                    else
-                    {
-                        // remove whitespace
-                        description = description.trim();
-                    }
+                    
+                    description = description.trim();
                     for (let j=0; j<employees.length; j++)
                     {
-                        let summary = description + ' - ' + employees[j];
+                        // let summary = description + ' - ' + employees[j];
+                        let summary = stack.join(' - ');
                         let hours = line[j+1];
                         if (hours && !isNaN(hours) && parseFloat(hours) <= LIMIT)
                         {

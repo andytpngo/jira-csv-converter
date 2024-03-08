@@ -12,7 +12,7 @@ const readFile = () => {
     // convert from csv to 2d array
     convertCSVto2DArray(csvData);
     // Modify it 
-    modifyCSV(contents);
+    exportData = modifyCSV(contents);
     // Generate a preview
     createTable(exportData);
   }
@@ -47,8 +47,7 @@ const onLimitChange = () => {
     }
     if (contents.length > 0)
     {
-        exportData = [];
-        modifyCSV(contents);
+        exportData = modifyCSV(contents);
         // reset table 
         document.getElementById("table-div").outerHTML = "<div id='table-div'></div>"
         createTable(exportData);
@@ -62,11 +61,26 @@ const resetGlobalVariables = () =>
     exportData = [];
 }
 
+const countLeadingSpaces = (inputString) => {
+    // Use a regular expression to match leading spaces
+    const matches = inputString.match(/^(\s+)/);
+  
+    // Check if matches were found
+    if (matches) {
+      // Count the length of the matched spaces
+      return matches[1].length;
+    } else {
+      // No leading spaces found
+      return 0;
+    }
+  }
 
 // Given a CSV in form of 2D array
 const modifyCSV = (csvData) => {
     let startIndex = 0;
     let employees = []
+
+    let matrix = []
     // remove 1st column
     csvData = csvData.map(line => line.slice(1));
     for (let i=0; i < csvData.length; i++)
@@ -89,36 +103,56 @@ const modifyCSV = (csvData) => {
         document.getElementById('err').innerHTML = "Preview:";
         // append data to export csv
         // add header
-        exportData.push(['Summary', 'Assignee', 'Time Spent (hours)']);
+        matrix.push(['Summary', 'Assignee', 'Time Spent (hours)']);
 
         // TODO: some summaries are repeated (i.e. template and configuration)
-        // do we...
-        // 1) combine them and merge hours
-        // 2) make it more descriptive "News - Template" and "Profile Cards - Template"
-        //      - need to find a way to make parents and children summaries?
+        // make it more descriptive "News - Template" and "Profile Cards - Template"
+        //      - need to find a way to make parents and children summaries
+        let parentHeading = null;
+        let leadingSpace = 0;
         for (let i=startIndex+1; i<csvData.length; i++)
         {
             let line = csvData[i];
+            if (i !== csvData.length-1)
+            {
+                // look ahead at next line
+                let nextLine = csvData[i+1];
+                let currentSpaceCount = countLeadingSpaces(line[0]);
+                let nextSpaceCount = countLeadingSpaces(nextLine[0]);
+                if (nextSpaceCount > currentSpaceCount)
+                {
+                    parentHeading = line[0].trim();
+                    leadingSpace = currentSpaceCount;
+                }
+            }
             if (line.length >= employees.length)
             {
                 let description = line[0];
                 if (description)
                 {
-                    // remove whitespace
-                    description = description.trim();
+                    if (countLeadingSpaces(description) > leadingSpace)
+                    {
+                        description = parentHeading + ' - ' + description.trim();
+                    }
+                    else
+                    {
+                        // remove whitespace
+                        description = description.trim();
+                    }
                     for (let j=0; j<employees.length; j++)
                     {
                         let summary = description + ' - ' + employees[j];
                         let hours = line[j+1];
                         if (hours && !isNaN(hours) && parseFloat(hours) <= LIMIT)
                         {
-                            exportData.push([summary, employees[j], hours]);
+                            matrix.push([summary, employees[j], hours]);
                         }
                     }
                 }
             }
         }
     }
+    return matrix;
 }
 
 

@@ -14,8 +14,19 @@
             <input id="csv" type="file" accept=".csv">
         </div>
         <div style="display: flex;">
-            <label style="margin-right: 10px;">Exclude hours greater than:</label>
+            <label>CSV Type:</label>
+            <select>
+                <option value="humtech_spreadsheet">HumTech Spreadsheet</option>
+                <option value="other_1">Other 1</option>
+                <option value="other_2">Other 2</option>
+            </select>
+        </div>
+        <div style="display: flex;">
+            <label>Exclude hours greater than:</label>
             <input id="limit" type="number" oninput="onLimitChange()" value="8">
+        </div>
+        <div id="translation-div">
+
         </div>
         <button id="export-button" onclick="exportCSV()" style="max-width: 125px;">Export CSV</button>
         <p style="margin: 0px" id="err"></p>

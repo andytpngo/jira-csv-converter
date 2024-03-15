@@ -3,6 +3,7 @@ let contents = []; // globally contains csv data as 2D array
 let baseFilename = 'file';
 let exportData = [];
 let LIMIT = 8;
+let EMPLOYEES_GLOBAL = [];
 document.getElementById('export-button').style.visibility = 'hidden';
 
 const readFile = () => {
@@ -59,6 +60,7 @@ const resetGlobalVariables = () =>
     contents = [];
     baseFilename = 'file';
     exportData = [];
+    EMPLOYEES_GLOBAL = [];
 }
 
 const countLeadingSpaces = (inputString) => {
@@ -79,14 +81,25 @@ const gcf = (num1, num2) => {
     // Ensure both numbers are positive integers
     num1 = Math.abs(Math.floor(num1));
     num2 = Math.abs(Math.floor(num2));
-
     while (num2) {
         const temp = num2;
         num2 = num1 % num2;
         num1 = temp;
     }
-
     return num1;
+}
+
+function findClosestMultipleOfN(x, n)
+{
+    if (x%n === 0 || n%x === 0)
+    {
+        return x;
+    }
+    if (x%n <= n/2)
+    {
+        return x - x%n;
+    }
+    return x + n - (x%n);
 }
 
 // Given a CSV in form of 2D array
@@ -113,15 +126,23 @@ const modifyCSV = (csvData) => {
     }
     else
     {
+        // Show employee translation boxes
+        let s = '<p>Define emails for each employee abbreviation:</p>\n';
+        for (let i=0; i<employees.length; i++)
+        {
+            EMPLOYEES_GLOBAL.push(employees[i]);
+            s += '<div style="display: flex;">\n'
+            s += `  <label>${employees[i]}</label>\n`
+            s += `  <input id="${employees[i]}-email" type="string"></input>\n`
+            s += '</div>\n'
+        }
+        document.getElementById('translation-div').innerHTML = s;
         document.getElementById('export-button').style.visibility = 'visible';
         document.getElementById('err').innerHTML = "Preview:";
         // append data to export csv
         // add header
         matrix.push(['Summary', 'Assignee', 'Time Spent (hours)']);
 
-        // TODO: some summaries are repeated (i.e. template and configuration)
-        // make it more descriptive "News - Template" and "Profile Cards - Template"
-        //      - need to find a way to make parents and children summaries
         let stack = [csvData[startIndex][0].trim()];
         for (let i=startIndex+1; i<csvData.length; i++)
         {
@@ -138,26 +159,38 @@ const modifyCSV = (csvData) => {
                 }
                 else if (currentSpaceCount <= prevSpaceCount)
                 {
-                    let difference = (prevSpaceCount-currentSpaceCount)/gcf(prevSpaceCount, currentSpaceCount);
+                    let difference = (prevSpaceCount-currentSpaceCount)/gcf(prevSpaceCount, findClosestMultipleOfN(currentSpaceCount, prevSpaceCount));
+                    console.log('--------')
+                    console.log(`prevSpaceCount: ${prevSpaceCount}`);
+                    console.log(`currentSpaceCount: ${currentSpaceCount}`);
+                    console.log(`gcf: ${gcf(prevSpaceCount, currentSpaceCount)}`)
+                    console.log(`findClosestMultipleOfN(${currentSpaceCount}, ${prevSpaceCount}): ${findClosestMultipleOfN(currentSpaceCount, prevSpaceCount)}`)
+                    console.log(`diff: ${difference}`);
+                    console.log(`line: ${line}`)
+                    console.log(`prevLine: ${prevLine}`)
+                    console.log(`stack (before): ${stack}`);
+                    
                     for (let q=0; q<difference+1; q++)
                     {
                         stack.pop();
                     }
                 }
                 stack.push(line[0].trim())
-                
+                console.log(`stack (after): ${stack}`);
+
             }
             if (line.length >= employees.length)
             {
                 let description = line[0];
                 if (description)
                 {
-                    
-                    description = description.trim();
                     for (let j=0; j<employees.length; j++)
                     {
                         // let summary = description + ' - ' + employees[j];
-                        let summary = stack.join(' - ');
+                        let tmpStack = [...stack];
+                        tmpStack.push(employees[j]);
+                        tmpStack.push(stack.length);
+                        let summary = tmpStack.join(' - ');
                         let hours = line[j+1];
                         if (hours && !isNaN(hours) && parseFloat(hours) <= LIMIT)
                         {
@@ -171,11 +204,11 @@ const modifyCSV = (csvData) => {
     return matrix;
 }
 
+// TODO: make it so that the export csv button doesn't appear until you enter in all emails
 
 
 function createTable(tableData) {
     let table = document.createElement('table');
-    console.log(table);
     let tableBody = document.createElement('tbody');
     tableData.forEach(function(rowData) {
         var row = document.createElement('tr');
@@ -197,6 +230,26 @@ const exportCSV = () => {
     {
         return;
     }
+
+    // look at header
+    let header = exportData[0];
+    let idx = 0;
+    // find index of "Assignees"
+    for (let i=0; i<header.length; i++)
+    {
+        if (header[i] === 'Assignee')
+        {
+            idx = i;
+        }
+    }
+    // For every row in that index, use the value of the input val
+    for (let i=1; i<exportData.length; i++)
+    {
+        
+        let employee = exportData[i][idx];
+        exportData[i][idx] = document.getElementById(`${employee}-email`).value;
+    }    
+
     let csvData = "data:text/csv;charset=utf-8,";
     exportData.forEach(function(rowArray) {
         // wrap each value with quotations
@@ -205,7 +258,7 @@ const exportCSV = () => {
         csvData += row + "\n";
     });
     var encodedUri = encodeURI(csvData);
-
+    
     var link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", baseFilename + "_jira_formatted.csv");

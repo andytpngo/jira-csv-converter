@@ -106,6 +106,7 @@ function findClosestMultipleOfN(x, n)
 const modifyCSV = (csvData) => {
     let startIndex = 0;
     let employees = []
+    let issueCount = 0;
 
     let matrix = []
     // remove 1st column
@@ -141,8 +142,7 @@ const modifyCSV = (csvData) => {
         document.getElementById('err').innerHTML = "Preview:";
         // append data to export csv
         // add header
-        matrix.push(['Summary', 'Assignee', 'Time Spent (hours)']);
-
+        matrix.push(['Summary', 'Assignee', 'Time Spent (hours)', 'Issue Type', 'Issue ID', 'Parent']);
         let stack = [csvData[startIndex][0].trim()];
         for (let i=startIndex+1; i<csvData.length; i++)
         {
@@ -160,16 +160,6 @@ const modifyCSV = (csvData) => {
                 else if (currentSpaceCount <= prevSpaceCount)
                 {
                     let difference = (prevSpaceCount-currentSpaceCount)/gcf(prevSpaceCount, findClosestMultipleOfN(currentSpaceCount, prevSpaceCount));
-                    console.log('--------')
-                    console.log(`prevSpaceCount: ${prevSpaceCount}`);
-                    console.log(`currentSpaceCount: ${currentSpaceCount}`);
-                    console.log(`gcf: ${gcf(prevSpaceCount, currentSpaceCount)}`)
-                    console.log(`findClosestMultipleOfN(${currentSpaceCount}, ${prevSpaceCount}): ${findClosestMultipleOfN(currentSpaceCount, prevSpaceCount)}`)
-                    console.log(`diff: ${difference}`);
-                    console.log(`line: ${line}`)
-                    console.log(`prevLine: ${prevLine}`)
-                    console.log(`stack (before): ${stack}`);
-                    
                     for (let q=0; q<difference+1; q++)
                     {
                         stack.pop();
@@ -185,16 +175,14 @@ const modifyCSV = (csvData) => {
                 if (description)
                 {
                     for (let j=0; j<employees.length; j++)
-                    {
-                        // let summary = description + ' - ' + employees[j];
+                    { 
                         let tmpStack = [...stack];
                         tmpStack.push(employees[j]);
-                        tmpStack.push(stack.length);
                         let summary = tmpStack.join(' - ');
                         let hours = line[j+1];
                         if (hours && !isNaN(hours) && parseFloat(hours) <= LIMIT)
                         {
-                            matrix.push([summary, employees[j], hours]);
+                            matrix.push([summary, employees[j], hours, '', '', '']);
                         }
                     }
                 }
